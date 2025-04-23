@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>台灣觀光人數分析</title>
+  <style>
+    body {
+      font-family: "Segoe UI", sans-serif;
+      background: #f5f8fb;
+      margin: 0;
+      padding-top: 60px;
+    }
+    .navbar {
+      overflow: hidden;
+      background-color: #f5f0e6;
+      position: fixed;
+      top: 0;
+      width: 100%;
+      z-index: 1000;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    }
+    .navbar a {
+      float: left;
+      color: #a27b5c;
+      text-align: center;
+      padding: 14px 20px;
+      text-decoration: none;
+      font-weight: bold;
+      border-radius: 6px;
+      margin: 6px 4px;
+    }
+    .navbar a:hover {
+      background: #d8bfa2;
+    }
+    main {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+    h1 {
+      font-size: 36px;
+      color: #333;
+      margin-top: 60px;
+    }
+    .section-subtitle {
+      font-size: 18px;
+      color: #555;
+    }
+    #chartdiv1, #chartdiv2 {
+      width: 100%;
+      height: 500px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+      margin: 40px 0;
+    }
+    #explanation {
+      background: #f5f0e6;
+      padding: 30px;
+      border-left: 6px solid #c8a77f;
+      border-radius: 16px;
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
+    }
+    #explanation h2 { color: #5a3e2b; }
+    #explanation strong { color: #000; }
+    footer {
+      text-align: center;
+      margin: 60px 0 20px;
+      color: #999;
+      font-size: 14px;
+    }
+    .controls {
+      text-align: center;
+      margin-top: 20px;
+    }
+    .controls button {
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: #007aff;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .controls button:hover {
+      background-color: #005bb5;
+    }
+
+#footer {
+  background-color: #f5f0e6; /* 奶茶色背景 */
+  padding: 20px 0;
+  text-align: center;        /* 文字置中 */
+}
+
+#footnote {
+  font-size: 14px;
+  color: #5a3e2b;            /* 深棕色字體（奶茶風） */
+  margin: 0;
+}
+
+
+  </style>
+  <script src="https://cdn.amcharts.com/lib/5/index.js"></script>
+  <script src="https://cdn.amcharts.com/lib/5/hierarchy.js"></script>
+  <script src="https://cdn.amcharts.com/lib/5/xy.js"></script>
+  <script src="https://cdn.amcharts.com/lib/5/themes/Animated.js"></script>
+</head>
+<body>
+  <div class="navbar">
+    <a href="#chartdiv1">洲別觀光人數</a>
+    <a href="#chartdiv2">亞洲變化動畫</a>
+  </div>
+  <main>
+    <h1>台灣觀光人數總覽</h1>
+    <p class="section-subtitle">2018–2024 各洲旅客來源（Force Directed）</p>
+    <div id="chartdiv1"></div>
+
+    <section id="explanation">
+      <h2>🔍 異常與特點說明：</h2>
+      <ul>
+        <li><strong>2020–2021 年：</strong>COVID-19 對全球觀光明顯衝擊。</li>
+        <li><strong>2024 年：</strong>其他未列明激增可能為資料異常。</li>
+        <li><strong>歐洲地區：</strong>人數異常偏低，值得注意。</li>
+      </ul>
+    </section>
+
+    <h1>亞洲旅客歷年變化</h1>
+    <p class="section-subtitle">1965–2024 各國赴台人數（Bar Chart Race）</p>
+    <div id="chartdiv2"></div>
+
+    <div class="controls">
+      <button id="togglePlay">⏸ 暫停動畫</button>
+    </div>
+
+<section id="trend-observation" style="background: #f5f0e6; padding: 30px; border-left: 6px solid #c8a77f; border-radius: 16px; box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08); margin-top: 40px;">
+  <h2 style="color: #5a3e2b;">🔍 資料趨勢初步觀察</h2>
+  <ul style="line-height: 1.8; color: #333;">
+    <li><strong>日本：</strong>自 1965 年以來穩居旅客來源第一名，2000 年後幾乎每年突破百萬。</li>
+    <li><strong>中國大陸：</strong>2008 年開放觀光後大幅成長，2014 年達近 400 萬人次。</li>
+    <li><strong>韓國與東南亞：</strong>持續穩定上升，韓國旅客數在 2019 年突破百萬。</li>
+    <li><strong>疫情期間：</strong>2020–2022 年幾乎所有國家的觀光人數大跌。</li>
+    <li><strong>2023–2024：</strong>觀光人數回升中，恢復至疫情前水準。</li>
+  </ul>
+</section>
+
+    
+
+    <footer>
+      資料來源：交通部觀光署｜圖表技術：amCharts 5
+    </footer>
+  </main>
+
+  <!-- Force Directed 圖表 script -->
+  <script>
+    am5.ready(function() {
+      const root = am5.Root.new("chartdiv1");
+      root.setThemes([am5themes_Animated.new(root)]);
+
+      const data = {
+        value: 0,
+        children: [
+          {
+            name: "2024", children: [
+              { name: "亞洲地區", value: 6577539 },
+              { name: "非洲地區", value: 11540 },
+              { name: "美洲地區", value: 784855 },
+              { name: "大洋洲地區", value: 131720 },
+              { name: "歐洲地區", value: 2051 },
+              { name: "其他未列明", value: 7857686 }
+            ]
+          },
+          {
+            name: "2023", children: [
+              { name: "亞洲地區", value: 5432055 },
+              { name: "非洲地區", value: 9354 },
+              { name: "美洲地區", value: 639976 },
+              { name: "大洋洲地區", value: 104205 },
+              { name: "歐洲地區", value: 298986 },
+              { name: "其他未列明", value: 2375 }
+            ]
+          },
+          {
+            name: "2022", children: [
+              { name: "亞洲地區",value: 696792 },
+              { name: "非洲地區",value: 3410 },
+              { name: "美洲地區",value: 108842 },
+              { name: "大洋洲地區",value: 14920 },
+              { name: "歐洲地區",value: 65990 },
+              { name: "其他未列明",value: 6008 },
+            ]
+          },
+          {
+            name: "2021",children:  [
+              { name: "亞洲地區",value: 105996 },
+              { name: "非洲地區",value: 901 },
+              { name: "美洲地區",value: 14642 },
+              { name: "大洋洲地區",value: 1358 },
+              { name: "歐洲地區",value: 16413 },
+              { name: "其他未列明",value: 1169 },
+            ]
+          },
+          {
+            name: "2020",children: [
+              { name: "亞洲地區",value: 1183987 },
+              { name: "非洲地區",value: 2502 },
+              { name: "美洲地區",value: 106117 },
+              { name: "大洋洲地區",value: 22606 },
+              { name: "歐洲地區",value: 59512 },
+              { name: "其他未列明",value: 3137 },
+            ]
+          },
+          {
+            name: "2019",children: [
+              { name: "亞洲地區",value: 10561699 },
+              { name: "非洲地區",value: 12537 },
+              { name: "美洲地區",value: 766254},
+              { name: "大洋洲地區",value: 134860},
+              { name: "歐洲地區",value: 386752},
+              { name: "其他未列明",value: 2003},
+            ]
+          },
+          {
+            name: "2018",children: [
+              { name: "亞洲地區",value: 9845761},
+              { name: "非洲地區",value: 12037 },
+              { name: "美洲地區",value: 732478},
+              { name: "大洋洲地區",value: 121697}, 
+              { name: "歐洲地區",value: 350094},
+              { name: "其他未列明",value: 4640},
+            ]
+          },
+          {
+            name: "2018",children: [
+              { name: "亞洲地區",value: 9845761},
+              { name: "非洲地區",value: 12037 },
+              { ame: "美洲地區",value: 732478},
+              { name: "大洋洲地區",value: 121697},
+              { name: "歐洲地區",value: 350094},    
+              { name: "其他未列明",value: 4640}
+            ]
+          }
+        ]
+      };
+
+      const container = root.container.children.push(am5.ZoomableContainer.new(root, {
+        width: am5.p100,
+        height: am5.p100,
+        wheelable: true,
+        pinchZoom: true
+      }));
+
+      container.children.push(am5.ZoomTools.new(root, { target: container }));
+
+      const series = container.contents.children.push(am5hierarchy.ForceDirected.new(root, {
+        maskContent: false,
+        downDepth: 2,
+        topDepth: 1,
+        initialDepth: 3,
+        valueField: "value",
+        categoryField: "name",
+        childDataField: "children",
+        idField: "name",
+        centerStrength: 0.8,
+        manyBodyStrength: -10
+      }));
+
+      series.get("colors").setAll({ step: 2 });
+      series.links.template.set("strength", 0.5);
+      series.labels.template.set("minScale", 0);
+      series.data.setAll([data]);
+      series.set("selectedDataItem", series.dataItems[0]);
+      series.appear(1000, 100);
+    });
+  </script>
+
+  
+  <script>
+
+    am5.ready(function() {
+
+// Data
+var allData = {
+  "1965": {
+   "日本":40424, "韓國":0, "中國大陸":0, "澳門":0, "越南":0, "泰國":0, "馬來西亞":0, "新加坡":0,  "菲律賓":0,  "印尼":0, "印度":0 
+  },
+  "1966": {
+    "日本":56677, "韓國":0, "中國大陸":0, "澳門":0, "越南":0, "泰國":0, "馬來西亞":0, "新加坡":0,  "菲律賓":0,  "印尼":0, "印度":0
+  },
+  "1967": {
+    "日本":57403, "韓國":3822,  "中國大陸":0, "澳門":0, "越南":3246,  "泰國":6364,  "馬來西亞":6101,  "新加坡":1741, "菲律賓":11269,  "印尼":0, "印度":770
+  },
+  "1968": {
+    "日本":106239,  "韓國":3216,  "中國大陸":0, "澳門":0, "越南":2741,  "泰國":5913,  "馬來西亞":7634,  "新加坡":3710, "菲律賓":12351,  "印尼":0, "印度":656
+  },
+  "1969": {
+    "日本":148088,  
+    "韓國":3387,  
+    "香港":0, 
+    "中國大陸":0, 
+    "澳門":0, 
+    "越南":3720,  
+    "泰國":6533,  
+    "馬來西亞":7512,  
+    "新加坡":4064, 
+    "菲律賓":11881,  
+    "印尼":0, 
+    "印度":541
+  },
+  "1970": {
+    "日本":181885,  
+    "韓國":4129,  
+    "香港":0, 
+    "中國大陸":0, 
+    "澳門":0, 
+    "越南":1977,  
+    "泰國":9718,  
+    "馬來西亞":10655, 
+    "新加坡":6806, 
+    "菲律賓":14767,  
+    "印尼":0, 
+    "印度":928
+  },
+  "1971": {
+    "日本":263396,  
+    "韓國":5495,  
+    "香港":0, 
+    "中國大陸":0, 
+    "澳門":0, 
+    "越南":1855,  
+    "泰國":8141,  
+    "馬來西亞":8910,  
+    "新加坡":6745, 
+    "菲律賓":12517,  
+    "印尼":2531,  
+    "印度":0
+  },
+  "1972": {
+    "日本":286439,  
+    "韓國":6744,  
+    "中國大陸":0, 
+    "澳門":0, 
+    "越南":3649,  
+    "泰國":10247, 
+    "馬來西亞":11680, 
+    "新加坡":10951,  
+    "菲律賓":11748,  
+    "印尼":756, 
+    "印度":908,
+  },
+  "1973": {
+    "日本":440875,  
+    "韓國":7334,  
+    "中國大陸":0, 
+    "澳門":0, 
+    "越南":3688,  
+    "泰國":12460, 
+    "馬來西亞":19846, 
+    "新加坡":17971,  
+    "菲律賓":6257, 
+    "印尼":8244,  
+    "印度":1590
+  },
+  "1974": {
+    "日本":441201,  
+    "韓國":10478, 
+    "中國大陸":0, 
+    "澳門":0, 
+    "越南":4471,  
+    "泰國":13540, 
+    "馬來西亞":21637, 
+    "新加坡":18462,  
+    "菲律賓":7907, 
+    "印尼":11903, 
+    "印度":1764
+  },
+  "1975": {
+    "日本":421125,  "香港":105850,  "中國大陸":0, "澳門":0, "越南":12210, "泰國":13356, "馬來西亞":27635, "新加坡":28033,  "菲律賓":7579, "印尼":15649, "印度":2565
+  },
+  "1976": {
+    "日本":517909,  "韓國":10816, "中國大陸":0, "澳門":0, "越南":4462,  "泰國":14401, "馬來西亞":32726, "新加坡":33255,  "菲律賓":7455, "印尼":20650, "印度":2426
+  },
+  "1977": {
+    "日本":565941,  "韓國":12035, "中國大陸":0, "澳門":0, "越南":0, "泰國":18121, "馬來西亞":36921, "新加坡":38026,  "菲律賓":11206,  "印尼":26292, "印度":1773
+  },
+  "1978": {
+    "日本":633750,  "韓國":22487, "中國大陸":0, "澳門":0, "越南":0, "泰國":20916, "馬來西亞":42891, "新加坡":44422,  "菲律賓":21856,  "印尼":34769, "印度":3025
+  },
+  "1979": {
+    "日本":706775,  "韓國":27505, "中國大陸":0, "澳門":0, "越南":0, "泰國":21950, "馬來西亞":54120, "新加坡":50580,  "菲律賓":23770,  "印尼":31198, "印度":3453
+  },
+  "1980": {
+    "日本":667078,  "韓國":29615, "中國大陸":0, "澳門":0, "越南":0, "泰國":25952, "馬來西亞":68794, "新加坡":53641,  "菲律賓":26569,  "印尼":37860, "印度":3752
+  },
+  "1981": {
+    "日本":603117,  "韓國":31088, "中國大陸":0, "澳門":0, "越南":0, "泰國":25827, "馬來西亞":70105, "新加坡":59873,  "菲律賓":30734,  "印尼":40952, "印度":4087  
+  },
+  "1982": {
+    "日本":579507,  "韓國":41029, "中國大陸":0, "澳門":0, "越南":0, "泰國":25760, "馬來西亞":63424, "新加坡":58044,  "菲律賓":29769,  "印尼":36991, "印度":4851
+  },
+  "1983": {
+    "日本":598574,  "韓國":39622, "中國大陸":0, "澳門":0, "越南":0, "泰國":28811, "馬來西亞":70493, "新加坡":62004,  "菲律賓":28820,  "印尼":32376, "印度":4649
+  },
+  "1984": {
+    "日本":636744,  "韓國":36161, "中國大陸":0, "澳門":0, "越南":0, "泰國":24015, "馬來西亞":73091, "新加坡":63676,  "菲律賓":25077,  "印尼":29845, "印度":5207
+  },
+  "1985": {
+    "日本":619973,  "韓國":36217, "中國大陸":0, "澳門":0, "越南":0, "泰國":20017, "馬來西亞":65565, "新加坡":53251,  "菲律賓":27264,  "印尼":27202, "印度":5420
+  },
+  "1986": {
+    "日本":694067,  "韓國":34743, "中國大陸":0, "澳門":0, "越南":0, "泰國":30872, "馬來西亞":59835, "新加坡":57221,  "菲律賓":29415,  "印尼":28934, "印度":5938
+  },
+  "1987": {
+    "日本":796651,  "韓國":44805, "中國大陸":0, "澳門":0, "越南":0, "泰國":27631, "馬來西亞":64479, "新加坡":56526,  "菲律賓":35818,  "印尼":26204, "印度":7848  
+  },
+  "1988": {
+    "日本":911599,  "韓國":91610, "中國大陸":0, "澳門":0, "越南":0, "泰國":24029, "馬來西亞":85688, "新加坡":61495,  "菲律賓":38283,  "印尼":26401, "印度":7626
+  },
+  "1989": {
+    "日本":964631,  "韓國":138494,  "中國大陸":0, "澳門":0, "越南":0, "泰國":21738, "馬來西亞":63017, "新加坡":59833,  "菲律賓":31173,  "印尼":26395, "印度":6509
+  },
+  "1990": {
+    "日本":917208,  "韓國":150510,  "中國大陸":0, "澳門":0, "越南":0, "泰國":21978, "馬來西亞":49439, "新加坡":59484,  "菲律賓":33665,  "印尼":25848, "印度":5974
+  },
+  "1991": {
+    "日本":833624,  "韓國":160861,  "中國大陸":0, "澳門":0, "越南":0, "泰國":25124, "馬來西亞":40921, "新加坡":62938,  "菲律賓":32646,  "印尼":23079, "印度":5531
+  },
+  "1992": {
+    "日本":789133,  "韓國":157786,  "中國大陸":0, "澳門":0, "越南":0, "泰國":34297, "馬來西亞":46783, "新加坡":64532,  "菲律賓":35472,  "印尼":22431, "印度":7028
+  },
+  "1993": {
+    "日本":703644,  "韓國":96088, "中國大陸":0, "澳門":0, "越南":0, "泰國":90029, "馬來西亞":51265, "新加坡":60796,  "菲律賓":60527,  "印尼":34502, "印度":7507
+  },
+  "1994": {
+    "日本":823882,  "韓國":130039,  "中國大陸":0, "澳門":0, "越南":0, "泰國":115553,  "馬來西亞":48216, "新加坡":70271,  "菲律賓":76113,  "印尼":39331, "印度":8253
+  },
+  "1995": {
+    "日本":914325,  "韓國":146012,  "中國大陸":0, "澳門":0, "越南":0, "泰國":147410,  "馬來西亞":54112, "新加坡":70564,  "菲律賓":96336,  "印尼":46486, "印度":9623
+  },
+  "1996": {
+    "日本":917890,  "韓國":126915,  "中國大陸":0, "澳門":0, "越南":0, "泰國":120764,  "馬來西亞":55730, "新加坡":78419,  "菲律賓":111782, "印尼":50925, "印度":10361
+  },
+  "1997": {
+    "日本":905527,  "韓國":99236, "中國大陸":0, "澳門":0, "越南":0, "泰國":122114,  "馬來西亞":54401, "新加坡":81831,  "菲律賓":119665, "印尼":54570, "印度":11507
+  },
+  "1998": {
+    "日本":826632,  "韓國":63099, "中國大陸":0, "澳門":0, "越南":0, "泰國":128541,  "馬來西亞":49291, "新加坡":87022,  "菲律賓":126282, "印尼":47967, "印度":11717
+  },
+  "1999": {
+    "日本":826222,  "韓國":76142, "中國大陸":0, "澳門":0, "越南":0, "泰國":137972,  "馬來西亞":52678, "新加坡":85844,  "菲律賓":123000, "印尼":76919, "印度":11556
+  },
+  "2000": {
+    "日本":916301,  "韓國":83729, "中國大陸":0, "澳門":0, "越南":0, "泰國":133185,  "馬來西亞":58017, "新加坡":94897,  "菲律賓":84088,  "印尼":107332,  "印度":13233 
+  },
+  "2001": {
+    "日本":976750,  "韓國":85744, "中國大陸":0, "澳門":0, "越南":0, "泰國":118453,  "馬來西亞":57615, "新加坡":98771,  "菲律賓":74028,  "印尼":89921, "印度":13106
+  },
+  "2002": {
+    "日本":998497,  "韓國":83624, "中國大陸":0, "澳門":0, "越南":0, "泰國":110650,  "馬來西亞":66304, "新加坡":111024, "菲律賓":79261,  "印尼":87728, "印度":13999
+  },
+  "2003": {
+    "日本":657053,  "韓國":92893, "中國大陸":0, "澳門":0, "越南":0, "泰國":98390, "馬來西亞":67014, "新加坡":78739,  "菲律賓":80026,  "印尼":38078, "印度":12464
+  },
+  "2004": {
+    "日本":887311,  "韓國":148095,  "中國大陸":0, "澳門":0, "越南":0, "泰國":103089,  "馬來西亞":92760, "新加坡":116885, "菲律賓":87005,  "印尼":44161, "印度":16305 
+  },
+  "2005": {
+    "日本":1124334, "韓國":182517,  "中國大陸":0, "澳門":0, "越南":0, "泰國":93568, "馬來西亞":107549,  "新加坡":166179, "菲律賓":92074,  "印尼":88464, "印度":17512 
+  },
+  "2006": {
+    "日本":1161489, "韓國":196260,  "中國大陸":0, "澳門":0, "越南":0, "泰國":95643, "馬來西亞":115202,  "新加坡":184160, "菲律賓":79993,  "印尼":90870, "印度":18047 
+  },
+  "2007": {
+    "日本":1166380, "韓國":225814,  "中國大陸":0, "澳門":0, "越南":0, "泰國":90069, "馬來西亞":141308,  "新加坡":204494, "菲律賓":85030,  "印尼":95572, "印度":19976
+  },
+  "2008": {
+    "日本":1086691, "韓國":252266,  "中國大陸":329204,  "澳門":33708, "越南":76786, "泰國":84586, "馬來西亞":155783,  "新加坡":205449, "菲律賓":87936,  "印尼":110420,  "印度":19976
+  },
+  "2009": {
+   "日本":1000661, "韓國":167641,  "中國大陸":972123,  "澳門":41747, "越南":60476, "泰國":78405, "馬來西亞":166987,  "新加坡":194523, "菲律賓":77206,  "印尼":106612,  "印度":18555
+  },
+  "2010": {
+    "日本":1080153, "韓國":216901,  "中國大陸":1630735, "澳門":49484, "越南":72352, "泰國":92949, "馬來西亞":285734,  "新加坡":241334, "菲律賓":87944,  "印尼":123834,  "印度":23849
+
+  },
+  "2011": {
+    "日本":1294758, "韓國":242902,  "中國大陸":1784185, "澳門":53911, "越南":95837, "泰國":102902,  "馬來西亞":307898,  "新加坡":299599, "菲律賓":101539, "印尼":156281,  "印度":23927 
+
+  },
+  "2012": {
+    "日本":1432315, "韓國":259089,  "中國大陸":2586428, "澳門":66702, "越南":89354, "泰國":97712, "馬來西亞":341032,  "新加坡":327253, "菲律賓":105130, "印尼":163598,  "印度":23251
+
+  },
+  "2013": {
+    "日本":1421550, "韓國":351301,  "中國大陸":2874702, "澳門":78118, "越南":118467,  "泰國":104138,  "馬來西亞":394326,  "新加坡":364733, "菲律賓":99698,  "印尼":171299,  "印度":23318
+  },
+  "2014": {
+    "日本":1634790, "韓國":527684,  "中國大陸":3987152, "澳門":99731, "越南":137177,  "泰國":104812,  "馬來西亞":439240,  "新加坡":376235, "菲律賓":136978, "印尼":182704,  "印度":30168
+
+  },
+  "2015": {
+    "日本":1627229, "韓國":658757,  "中國大陸":4184102, "澳門":124068,  "越南":146380,  "泰國":124409,  "馬來西亞":431481,  "新加坡":393037, "菲律賓":139217, "印尼":177743,  "印度":32198
+
+  },
+  "2016": {
+    "日本":1895702, "韓國":884397,  "中國大陸":3511734, "澳門":140282,  "越南":196636,  "泰國":195640,  "馬來西亞":474420,  "新加坡":407267, "菲律賓":172475, "印尼":188720,  "印度":33550
+
+  },
+  "2017": {
+    "日本":1898854, "韓國":1054708, "中國大陸":2732549, "澳門":151298,  "越南":383329,  "泰國":292534,  "馬來西亞":528019,  "新加坡":425577, "菲律賓":290784, "印尼":189631,  "印度":34962 
+
+  },
+  "2018": {
+    "日本":1969151, "韓國":1019441, "中國大陸":2695615, "澳門":147118,  "越南":490774,  "泰國":320008,  "馬來西亞":526129,  "新加坡":427222, "菲律賓":419105, "印尼":210985,  "印度":38385
+
+  },
+  "2019": {
+    "日本":2167952, "韓國":1242598, "中國大陸":2714065, "澳門":159783,  "越南":405396,  "泰國":413926,  "馬來西亞":537692,  "新加坡":460635, "菲律賓":509519, "印尼":229960,  "印度":40353
+
+  },
+  "2020": {
+    "日本":269659,  "韓國":178911,  "中國大陸":111050,  "澳門":15336, "越南":110882,  "泰國":63553, "馬來西亞":72705, "新加坡":49946,  "菲律賓":77065,  "印尼":55717, "印度":6606
+
+  },
+  "2021": {
+    "日本":10056, "韓國":3300,  "中國大陸":13267, "澳門":1166,  "越南":24935, "泰國":7570,  "馬來西亞":6205,  "新加坡":2417, "菲律賓":9183, "印尼":13819, "印度":1930 
+
+  },
+  "2022": {
+    "日本":87616, "韓國":51748, "中國大陸":24378, "澳門":1612,  "越南":134818,  "泰國":74434, "馬來西亞":59035, "新加坡":69507,  "菲律賓":64038,  "印尼":78162, "印度":9390,  
+
+  },
+  "2023": {
+    "日本":928235,  "韓國":744727,  "中國大陸":226269,  "澳門":95053, "越南":382529,  "泰國":394688,  "馬來西亞":437491,  "新加坡":463893, "菲律賓":350487, "印尼":201980,  "印度":31584
+
+  },
+  "2024": {
+    "日本":1319592, "韓國":1003086, "中國大陸":438212,  "澳門":112760,  "越南":370548,  "泰國":400038,  "馬來西亞":429727,  "新加坡":447841, "菲律賓":467157, "印尼":224477,  "印度":38158
+
+  }
+};
+
+
+// Create root element
+// https://www.amcharts.com/docs/v5/getting-started/#Root_element
+var root = am5.Root.new("chartdiv2");
+
+
+
+root.numberFormatter.setAll({
+  numberFormat: "#a",
+
+  // Group only into M (millions), and B (billions)
+  bigNumberPrefixes: [
+    { number: 1e6, suffix: "M" },
+    { number: 1e9, suffix: "B" }
+  ],
+
+  // Do not use small number prefixes at all
+  smallNumberPrefixes: []
+});
+
+var stepDuration = 2000;
+
+
+// Set themes
+// https://www.amcharts.com/docs/v5/concepts/themes/
+root.setThemes([am5themes_Animated.new(root)]);
+
+
+// Create chart
+// https://www.amcharts.com/docs/v5/charts/xy-chart/
+var chart = root.container.children.push(am5xy.XYChart.new(root, {
+  panX: true,
+  panY: true,
+  wheelX: "none",
+  wheelY: "none",
+  paddingLeft: 0
+}));
+
+
+// We don't want zoom-out button to appear while animating, so we hide it at all
+chart.zoomOutButton.set("forceHidden", true);
+
+
+// Create axes
+// https://www.amcharts.com/docs/v5/charts/xy-chart/axes/
+var yRenderer = am5xy.AxisRendererY.new(root, {
+  minGridDistance: 20,
+  inversed: true,
+  minorGridEnabled: true
+});
+// hide grid
+yRenderer.grid.template.set("visible", false);
+
+var yAxis = chart.yAxes.push(am5xy.CategoryAxis.new(root, {
+  maxDeviation: 0,
+  categoryField: "network",
+  renderer: yRenderer
+}));
+
+var xAxis = chart.xAxes.push(am5xy.ValueAxis.new(root, {
+  maxDeviation: 0,
+  min: 0,
+  strictMinMax: true,
+  extraMax: 0.1,
+  renderer: am5xy.AxisRendererX.new(root, {})
+}));
+
+xAxis.set("interpolationDuration", stepDuration / 10);
+xAxis.set("interpolationEasing", am5.ease.linear);
+
+
+// Add series
+// https://www.amcharts.com/docs/v5/charts/xy-chart/series/
+var series = chart.series.push(am5xy.ColumnSeries.new(root, {
+  xAxis: xAxis,
+  yAxis: yAxis,
+  valueXField: "value",
+  categoryYField: "network"
+}));
+
+// Rounded corners for columns
+series.columns.template.setAll({ cornerRadiusBR: 5, cornerRadiusTR: 5 });
+
+// Make each column to be of a different color
+series.columns.template.adapters.add("fill", function (fill, target) {
+  return chart.get("colors").getIndex(series.columns.indexOf(target));
+});
+
+series.columns.template.adapters.add("stroke", function (stroke, target) {
+  return chart.get("colors").getIndex(series.columns.indexOf(target));
+});
+
+// Add label bullet
+series.bullets.push(function () {
+  return am5.Bullet.new(root, {
+    locationX: 1,
+    sprite: am5.Label.new(root, {
+      text: "{valueXWorking.formatNumber('#.# a')}",
+      fill: root.interfaceColors.get("alternativeText"),
+      centerX: am5.p100,
+      centerY: am5.p50,
+      populateText: true
+    })
+  });
+});
+
+var label = chart.plotContainer.children.push(am5.Label.new(root, {
+  text: "2002",
+  fontSize: "8em",
+  opacity: 0.2,
+  x: am5.p100,
+  y: am5.p100,
+  centerY: am5.p100,
+  centerX: am5.p100
+}));
+
+// Get series item by category
+function getSeriesItem(category) {
+  for (var i = 0; i < series.dataItems.length; i++) {
+    var dataItem = series.dataItems[i];
+    if (dataItem.get("categoryY") == category) {
+      return dataItem;
+    }
+  }
+}
+
+// Axis sorting
+function sortCategoryAxis() {
+  // sort by value
+  series.dataItems.sort(function (x, y) {
+    return y.get("valueX") - x.get("valueX"); // descending
+    //return x.get("valueX") - y.get("valueX"); // ascending
+  });
+
+  // go through each axis item
+  am5.array.each(yAxis.dataItems, function (dataItem) {
+    // get corresponding series item
+    var seriesDataItem = getSeriesItem(dataItem.get("category"));
+
+    if (seriesDataItem) {
+      // get index of series data item
+      var index = series.dataItems.indexOf(seriesDataItem);
+      // calculate delta position
+      var deltaPosition =
+        (index - dataItem.get("index", 0)) / series.dataItems.length;
+      // set index to be the same as series data item index
+      if (dataItem.get("index") != index) {
+        dataItem.set("index", index);
+        // set deltaPosition instanlty
+        dataItem.set("deltaPosition", -deltaPosition);
+        // animate delta position to 0
+        dataItem.animate({
+          key: "deltaPosition",
+          to: 0,
+          duration: stepDuration / 2,
+          easing: am5.ease.out(am5.ease.cubic)
+        });
+      }
+    }
+  });
+  // sort axis items by index.
+  // This changes the order instantly, but as deltaPosition is set, they keep in the same places and then animate to true positions.
+  yAxis.dataItems.sort(function (x, y) {
+    return x.get("index") - y.get("index");
+  });
+}
+
+var year = 1965;
+
+// update data with values each 1.5 sec
+var interval = setInterval(function () {
+  if (!animationPaused) {
+    year++;
+    if (year > 2024) {
+      clearInterval(interval);
+      clearInterval(sortInterval);
+    }
+    updateData();
+  }
+}, stepDuration);
+
+
+var sortInterval = setInterval(function () {
+  if (!animationPaused) {
+    sortCategoryAxis();
+  }
+}, 100);
+
+function setInitialData() {
+  var d = allData[year];
+
+  for (var n in d) {
+    series.data.push({ network: n, value: d[n] });
+    yAxis.data.push({ network: n });
+  }
+}
+
+function updateData() {
+  var itemsWithNonZero = 0;
+
+  if (allData[year]) {
+    label.set("text", year.toString());
+
+    am5.array.each(series.dataItems, function (dataItem) {
+      var category = dataItem.get("categoryY");
+      var value = allData[year][category];
+
+      if (value > 0) {
+        itemsWithNonZero++;
+      }
+
+      dataItem.animate({
+        key: "valueX",
+        to: value,
+        duration: stepDuration,
+        easing: am5.ease.linear
+      });
+      dataItem.animate({
+        key: "valueXWorking",
+        to: value,
+        duration: stepDuration,
+        easing: am5.ease.linear
+      });
+    });
+
+    yAxis.zoom(0, itemsWithNonZero / yAxis.dataItems.length);
+  }
+}
+
+setInitialData();
+setTimeout(function () {
+  year++;
+  updateData();
+}, 50);
+
+// Make stuff animate on load
+// https://www.amcharts.com/docs/v5/concepts/animations/
+series.appear(1000);
+chart.appear(1000, 100);
+
+}); // end am5.ready()
+
+    
+    let animationPaused = false;
+    let mainInterval = null;
+
+    function startAnimation(callback, delay = 2000) {
+      mainInterval = setInterval(() => {
+        if (!animationPaused) callback();
+      }, delay);
+    }
+
+    function stopAnimation() {
+      clearInterval(mainInterval);
+      mainInterval = null;
+    }
+
+    document.getElementById("togglePlay").addEventListener("click", function () {
+  animationPaused = !animationPaused;
+  this.textContent = animationPaused ? "▶ 繼續動畫" : "⏸ 暫停動畫";
+});
+
+  </script>
+
+<div id="footer">
+  <div class="background">
+    <div class="body">
+      <div class="section"></div>
+      <p id="footnote">© 製作者: 陳郁蓉 2025 (copyright reversed).</p>
+    </div>
+  </div>
+</div>
+
+
+</body>
+</html>
+  
+
